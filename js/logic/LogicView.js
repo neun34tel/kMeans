@@ -21,9 +21,9 @@ define( [ 'jquery', 'marionette' ], function ( $, Marionette ) {
 
             this.model = options.model;
 
-            console.log( 'options', options );
-            console.log( 'this.model', this.model );
-            console.log( 'this.$el', this.$el );
+            //console.log( 'options', options );
+            //console.log( 'this.model', this.model );
+            //console.log( 'this.$el', this.$el );
 
             // UI Element constants
             this.WINDOW_HEIGHT = window.innerHeight;
@@ -34,12 +34,16 @@ define( [ 'jquery', 'marionette' ], function ( $, Marionette ) {
             // Circle data
             this.ARC_BEGIN  = 0;
             this.ARC_END    = Math.PI * 2;
-            this.CENTROID_RADIUS = 5;
-            this.DOT_RADIUS = 2;
+            this.CENTROID_RADIUS = 10;
+            this.DOT_RADIUS = 5;
 
             this.bindUIElements();
         },
 
+        /**
+         * To initialize the canvas context we need to put the logic in here since
+         * it won't exist after being rendered first
+         */
         onRender : function () {
             this.canvas = $( '#canvas' )[0];
             this.ctx = this.canvas.getContext( '2d' );
@@ -47,7 +51,21 @@ define( [ 'jquery', 'marionette' ], function ( $, Marionette ) {
             this.ctx.canvas.width  = this.CANVAS_WIDTH;
         },
 
-        // draw a point on the canvas with x and y as its coordinates
+        /**
+         * Deleting the canvas is essential before each iteration
+         */
+        clearCanvas : function () {
+            this.ctx.clearRect( 0, 0, this.CANVAS_WIDTH, this.CANVAS_HEIGHT );
+        },
+
+        /**
+         * Draw a dot on the canvas with the given parameters
+         *
+         * @param x
+         * @param y
+         * @param radius
+         * @param color
+         */
         draw : function ( x, y, radius, color ) {
         this.ctx.beginPath();
         this.ctx.fillStyle = color;
@@ -60,15 +78,17 @@ define( [ 'jquery', 'marionette' ], function ( $, Marionette ) {
          * @param cluster: array of dots
          */
         drawCluster : function ( cluster ) {
-        _.each( cluster, function( dot ) {
-            this.draw( dot.x, dot.y, dot.radius, dot.color )
-        }.bind( this ) );
+            _.each( cluster, function( dot ) {
+                this.draw( dot.x, dot.y, dot.radius, dot.color )
+            }.bind( this ) );
         },
 
+        /**
+         * This is the start button click detection method
+         */
         onBtnIterateClicked : function () {
-            this.draw();
+            // Let the controller know the button was clicked
             this.trigger( 'onStartBtnClicked' );
-            console.log( 'This will happen soon enough!' );
         }
 
     } );

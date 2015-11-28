@@ -8,16 +8,18 @@ define( [ 'marionette', 'logic/LogicView', 'logic/LogicModel' ], function ( Mari
             this.initializeModel();
             this.initializeViews();
 
-            var centroids = this.generateCentroids( 10 );
+            var centroids = this.generateRandomCentroids( 10 );
             this.view.drawCluster( centroids );
 
-            this.on( 'onStartBtnClicked', this.onStartBtnClicked.bind( this ) );
+            var dataPoints = this.generateRandomDataPoints( 100 );
+            this.view.drawCluster( dataPoints );
+
+            this.listenTo( this.view, 'onStartBtnClicked', this.onStartBtnClicked.bind( this ) );
         },
 
         initializeModel : function () {
             this.model = new LogicModel();
             this.model.set( 'name', 'Kay' );
-            console.log( 'this.model', this.model );
         },
 
         initializeViews : function () {
@@ -30,29 +32,35 @@ define( [ 'marionette', 'logic/LogicView', 'logic/LogicModel' ], function ( Mari
         },
 
         onStartBtnClicked : function () {
-            console.log( 'Controller knows!' );
+            console.log( 'Controller generating new centroids!' );
+            this.view.clearCanvas();
+            this.view.drawCluster( this.generateRandomCentroids( Math.random() * 25 + 1 ) );
         },
 
-        centroid : function ( x, y ) {
+        generateRandomColor: function () {
+            return 'rgb(' + ( Math.floor( Math.random() * 255 + 1 ) ) + ', ' + ( Math.floor( Math.random() * 255 + 1 ) ) + ', '  + ( Math.floor( Math.random() * 255 + 1 ) ) + ')';
+        },
+
+        centroid : function ( x, y, color ) {
             return {
                 x : x,
                 y : y,
                 radius : this.view.CENTROID_RADIUS,
-                color: 'lime',
+                color: color || this.generateRandomColor() ,
                 dots : []
             }
         },
 
-        dataPoint : function ( x, y ) {
+        dataPoint : function ( x, y, color ) {
             return {
                 x : x,
                 y : y,
                 radius : this.view.DOT_RADIUS,
-                color : 'black'
+                color : color || this.generateRandomColor()
             }
         },
 
-        generateCentroids : function ( quantity ) {
+        generateRandomCentroids : function (quantity ) {
             var centroids = [];
             for( var i = 0; i < quantity; i++ ) {
                 centroids.push(
@@ -60,6 +68,16 @@ define( [ 'marionette', 'logic/LogicView', 'logic/LogicModel' ], function ( Mari
                 );
             }
             return centroids;
+        },
+
+        generateRandomDataPoints : function (quantity ) {
+            var dataPoints = [];
+            for( var i = 0; i < quantity; i++ ) {
+                dataPoints.push(
+                        this.dataPoint( Math.floor((Math.random() * this.view.CANVAS_WIDTH) + 1), Math.floor((Math.random() * this.view.CANVAS_HEIGHT) + 1) )
+                );
+            }
+            return dataPoints;
         }
     });
 } );
