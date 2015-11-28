@@ -34,7 +34,7 @@ define( [ 'jquery', 'marionette' ], function ( $, Marionette ) {
             // Circle data
             this.ARC_BEGIN  = 0;
             this.ARC_END    = Math.PI * 2;
-            this.CENTROID_RADIUS = 10;
+            this.CENTROID_RADIUS = 15;
             this.DOT_RADIUS = 5;
 
             this.bindUIElements();
@@ -77,9 +77,23 @@ define( [ 'jquery', 'marionette' ], function ( $, Marionette ) {
          * Function draws an array of dots on the canvas
          * @param cluster: array of dots
          */
-        drawCluster : function ( cluster ) {
+        drawArray : function ( cluster ) {
             _.each( cluster, function( dot ) {
                 this.draw( dot.x, dot.y, dot.radius, dot.color )
+            }.bind( this ) );
+        },
+
+        /**
+         * Function draws a cluster on the canvas (an array of centroids and their data points)
+         * @param cluster: array centroid of dots
+         */
+        drawCluster : function ( cluster ) {
+            //console.log( 'drawCluster cluster', cluster );
+            _.each( cluster, function( centroid ) {
+                this.draw( centroid.x, centroid.y, centroid.radius, centroid.color );
+                _.each( centroid.dots, function ( dataPoint ) {
+                    this.draw( dataPoint.x, dataPoint.y, dataPoint.radius, centroid.color )
+                }.bind( this ) );
             }.bind( this ) );
         },
 

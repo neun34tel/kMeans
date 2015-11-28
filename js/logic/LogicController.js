@@ -1,25 +1,28 @@
 /**
  * Created by michael_brecker on 11/22/15.
  */
-define( [ 'marionette', 'logic/LogicView', 'logic/LogicModel' ], function ( Marionette, LogicView, LogicModel ) {
+define( [ 'marionette', 'logic/LogicView', 'logic/LogicModel', 'logic/LogicCollection' ], function ( Marionette, LogicView, LogicModel, LogicCollection ) {
 
     return Marionette.Controller.extend( {
         initialize : function () {
             this.initializeModel();
+            this.initializeCollection();
             this.initializeViews();
 
-            var centroids = this.generateRandomCentroids( 10 );
-            this.view.drawCluster( centroids );
-
-            var dataPoints = this.generateRandomDataPoints( 100 );
-            this.view.drawCluster( dataPoints );
+            this.centroidCollection = this.generateRandomCentroids( 15 );
+            this.dataPointCollection = this.generateRandomDataPoints( 1000 );
 
             this.listenTo( this.view, 'onStartBtnClicked', this.onStartBtnClicked.bind( this ) );
+
+            this.prepare();
         },
 
         initializeModel : function () {
             this.model = new LogicModel();
-            this.model.set( 'name', 'Kay' );
+        },
+
+        initializeCollection : function () {
+            this.collection = new LogicCollection();
         },
 
         initializeViews : function () {
@@ -46,7 +49,9 @@ define( [ 'marionette', 'logic/LogicView', 'logic/LogicModel' ], function ( Mari
          * @returns {string}
          */
         generateRandomColor: function () {
-            return 'rgb(' + ( Math.floor( Math.random() * 255 + 1 ) ) + ', ' + ( Math.floor( Math.random() * 255 + 1 ) ) + ', '  + ( Math.floor( Math.random() * 255 + 1 ) ) + ')';
+            return 'rgb(' + ( Math.floor( Math.random() * 255 + 1 ) ) + ', '
+                          + ( Math.floor( Math.random() * 255 + 1 ) ) + ', '
+                          + ( Math.floor( Math.random() * 255 + 1 ) ) + ')';
         },
 
         /**
@@ -94,7 +99,8 @@ define( [ 'marionette', 'logic/LogicView', 'logic/LogicModel' ], function ( Mari
             var centroids = [];
             for( var i = 0; i < quantity; i++ ) {
                 centroids.push(
-                        this.centroid( Math.floor((Math.random() * this.view.CANVAS_WIDTH) + 1), Math.floor((Math.random() * this.view.CANVAS_HEIGHT) + 1) )
+                        this.centroid( Math.floor( ( Math.random() * this.view.CANVAS_WIDTH ) + 1),
+                                       Math.floor( ( Math.random() * this.view.CANVAS_HEIGHT ) + 1 ) )
                 );
             }
             return centroids;
@@ -110,10 +116,84 @@ define( [ 'marionette', 'logic/LogicView', 'logic/LogicModel' ], function ( Mari
             var dataPoints = [];
             for( var i = 0; i < quantity; i++ ) {
                 dataPoints.push(
-                        this.dataPoint( Math.floor((Math.random() * this.view.CANVAS_WIDTH) + 1), Math.floor((Math.random() * this.view.CANVAS_HEIGHT) + 1) )
+                        this.dataPoint( Math.floor((Math.random() * this.view.CANVAS_WIDTH) + 1),
+                                        Math.floor((Math.random() * this.view.CANVAS_HEIGHT) + 1) )
                 );
             }
             return dataPoints;
+        },
+
+        /**
+         * At first, every data point needs to be assigned to a cluster
+         * After that, we can iterate
+         */
+        prepare : function () {
+            this.initializeCluster();
+            this.view.drawCluster( this.centroidCollection );
+            this.iterationComplete();
+        },
+
+        /**
+         * Assign all data points a centroid
+         */
+        initializeCluster : function () {
+            _.each( this.dataPointCollection, function ( dataPoint )  {
+                var index = this.returnClusterIndex( this.centroidCollection, dataPoint );
+                this.centroidCollection[ index ].dots.push( dataPoint );
+            }.bind( this ) );
+        },
+
+        /**
+         * Next iteration step
+         */
+        iteration : function () {
+            //TODO: iterate
+        },
+
+        /**
+         * Save our model to the collection
+         */
+        iterationComplete : function () {
+            this.model.set( 'centroidCollection', this.centroidCollection );
+            this.collection.add( this.model );
+            console.log( 'this.collection', this.collection );
+        },
+
+        /**
+         * Calculates the Euclidean Distance between two dots
+         *
+         * @param centroid
+         * @param dot
+         */
+        calculateEuclideanDistance : function ( centroid, dot ) {
+            // See https://en.wikipedia.org/wiki/Euclidean_distance for reference:
+            return Math.sqrt( Math.pow( ( centroid.x - dot.x ), 2) + Math.pow( ( centroid.y - dot.y ), 2 ) );
+        },
+
+        /**
+         * Push data point its corresponding centroid cluster
+         *
+         * @param centroidCollection
+         * @param dataPoint
+         */
+        returnClusterIndex : function ( centroidCollection, dataPoint ) {
+            var distance = this.calculateEuclideanDistance( centroidCollection[0], dataPoint );
+            var centroidIndex = 0;
+            _.each( centroidCollection, function ( centroid, index ) {
+                if( index == 0 ) {
+                    return; // Calculated that already, it's our initial value
+                }
+                // Calculate Euclidean Distance for the data point for each centroid
+                var euclid = this.calculateEuclideanDistance( centroid, dataPoint );
+                // if currently calculated distance is smaller than the last, save the new data
+                if( euclid < distance ) {
+                    distance = euclid;
+                    centroidIndex = index;
+                }
+            }.bind( this ) );
+            // Push our data point to the corresponding centroid's cluster
+            //centroidCollection[ centroidIndex ].dots.push( dataPoint );
+            return centroidIndex;
         }
     });
 } );
