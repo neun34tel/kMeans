@@ -1,5 +1,7 @@
 /**
  * Created by michael_brecker on 11/22/15.
+ *
+ * Implements the logic for K-Means
  */
 define( [ 'marionette', 'logic/LogicView', 'logic/LogicModel', 'logic/LogicCollection' ], function ( Marionette, LogicView, LogicModel, LogicCollection ) {
 
