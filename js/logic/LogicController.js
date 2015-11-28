@@ -31,16 +31,32 @@ define( [ 'marionette', 'logic/LogicView', 'logic/LogicModel' ], function ( Mari
             this.view.render();
         },
 
+        /**
+         * This is triggered when the view detects a click ont he start button
+         */
         onStartBtnClicked : function () {
             console.log( 'Controller generating new centroids!' );
             this.view.clearCanvas();
             this.view.drawCluster( this.generateRandomCentroids( Math.random() * 25 + 1 ) );
         },
 
+        /**
+         * This returns a random color value in the form rgb(random, random, random)
+         *
+         * @returns {string}
+         */
         generateRandomColor: function () {
             return 'rgb(' + ( Math.floor( Math.random() * 255 + 1 ) ) + ', ' + ( Math.floor( Math.random() * 255 + 1 ) ) + ', '  + ( Math.floor( Math.random() * 255 + 1 ) ) + ')';
         },
 
+        /**
+         * Defines a single centroid
+         *
+         * @param x
+         * @param y
+         * @param color
+         * @returns {{x: *, y: *, radius: number, color: (*|string), dots: Array}}
+         */
         centroid : function ( x, y, color ) {
             return {
                 x : x,
@@ -51,6 +67,14 @@ define( [ 'marionette', 'logic/LogicView', 'logic/LogicModel' ], function ( Mari
             }
         },
 
+        /**
+         * Defines a single data point
+         *
+         * @param x
+         * @param y
+         * @param color
+         * @returns {{x: *, y: *, radius: number, color: (*|string)}}
+         */
         dataPoint : function ( x, y, color ) {
             return {
                 x : x,
@@ -60,6 +84,12 @@ define( [ 'marionette', 'logic/LogicView', 'logic/LogicModel' ], function ( Mari
             }
         },
 
+        /**
+         * Initially generates some random centroids
+         *
+         * @param quantity
+         * @returns {Array}
+         */
         generateRandomCentroids : function (quantity ) {
             var centroids = [];
             for( var i = 0; i < quantity; i++ ) {
@@ -70,6 +100,12 @@ define( [ 'marionette', 'logic/LogicView', 'logic/LogicModel' ], function ( Mari
             return centroids;
         },
 
+        /**
+         * Initially generates some random data points
+         *
+         * @param quantity
+         * @returns {Array}
+         */
         generateRandomDataPoints : function (quantity ) {
             var dataPoints = [];
             for( var i = 0; i < quantity; i++ ) {
