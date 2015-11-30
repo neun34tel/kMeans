@@ -6,27 +6,46 @@
 define( [ 'marionette', 'logic/LogicView', 'logic/LogicModel', 'logic/LogicCollection' ], function ( Marionette, LogicView, LogicModel, LogicCollection ) {
 
     return Marionette.Controller.extend( {
+
+        /**
+         * Initialize the application's logic
+         */
         initialize : function () {
+
+            this.INITIAL_CENTROIDS  = 25;
+            this.INITIAL_DATAPOINTS = 10000;
+
             this.initializeModel();
             this.initializeCollection();
             this.initializeViews();
 
-            this.centroidCollection = this.generateRandomCentroids( 15 );
-            this.dataPointCollection = this.generateRandomDataPoints( 1000 );
+            this.centroidCollection = this.generateRandomCentroids( this.INITIAL_CENTROIDS );
+            this.dataPointCollection = this.generateRandomDataPoints( this.INITIAL_DATAPOINTS );
+
+            this.running = true; // condition for while loop that iterates
 
             this.listenTo( this.view, 'onStartBtnClicked', this.onStartBtnClicked.bind( this ) );
 
             this.prepare();
         },
 
+        /**
+         * Initialization of the model
+         */
         initializeModel : function () {
             this.model = new LogicModel();
         },
 
+        /**
+         * Initialization of the model collection
+         */
         initializeCollection : function () {
             this.collection = new LogicCollection();
         },
 
+        /**
+         * Initialization of the view
+         */
         initializeViews : function () {
             this.view = new LogicView( {
                 el : '.js-ui-wrapper',
@@ -40,9 +59,10 @@ define( [ 'marionette', 'logic/LogicView', 'logic/LogicModel', 'logic/LogicColle
          * This is triggered when the view detects a click ont he start button
          */
         onStartBtnClicked : function () {
-            console.log( 'Controller generating new centroids!' );
-            this.view.clearCanvas();
-            this.view.drawCluster( this.generateRandomCentroids( Math.random() * 25 + 1 ) );
+            //console.log( 'Controller generating new centroids!' );
+            this.iteration();
+            //this.view.clearCanvas();
+            //this.view.drawCluster( this.generateRandomCentroids( Math.random() * 25 + 1 ) );
         },
 
         /**
@@ -130,15 +150,15 @@ define( [ 'marionette', 'logic/LogicView', 'logic/LogicModel', 'logic/LogicColle
          * After that, we can iterate
          */
         prepare : function () {
-            this.initializeCluster();
+            this.pushClustersInitially();
             this.view.drawCluster( this.centroidCollection );
             this.iterationComplete();
         },
 
         /**
-         * Assign all data points a centroid
+         * Assign all data points a centroid for the first time (data points not sorted to clusters, yet)
          */
-        initializeCluster : function () {
+        pushClustersInitially : function () {
             _.each( this.dataPointCollection, function ( dataPoint )  {
                 var index = this.returnClusterIndex( this.centroidCollection, dataPoint );
                 this.centroidCollection[ index ].dots.push( dataPoint );
@@ -146,10 +166,72 @@ define( [ 'marionette', 'logic/LogicView', 'logic/LogicModel', 'logic/LogicColle
         },
 
         /**
+         * Assign all data points a centroid (when each centroid already has data points assigned)
+         */
+        pushClusters : function () {
+            this.dataPointCollection = [];
+            _.each( this.centroidCollection, function( centroid ) {
+                this.dataPointCollection.concat( centroid.dots );
+            }.bind( this ) );
+            _.each( this.dataPointCollection, function ( dataPoint )  {
+                var index = this.returnClusterIndex( this.centroidCollection, dataPoint );
+                this.centroidCollection[ index ].dots.push( dataPoint );
+            }.bind( this ) );
+        },
+
+        /**
+         * Calculate the new centroid of a cluster
+         */
+        calculateCentroidOfCluster : function ( cluster ) {
+            // TODO: calculate arithmetic mean of a cluster
+        },
+
+        /**
          * Next iteration step
          */
         iteration : function () {
-            //TODO: iterate
+            debugger;
+            while( this.running ) {
+                debugger;
+                this.updateCentroids(); // Update our model for the next iteration step
+                this.model.set( 'iteration', this.model.get( 'iteration' ) + 1 ); // we are in the next iteration
+                this.pushClusters();
+                if( this.checkForFinished() ) {
+                    this.view.clearCanvas();
+                    this.view.drawCluster( this.centroidCollection );
+                    this.iterationComplete();
+                }
+                else {
+                    this.running = false;
+                }
+            }
+        },
+
+        /**
+         * Put new centroids in the model
+         * using the arithmetic mean to calculate them
+         */
+        updateCentroids : function () {
+            var centroids = this.model.get( 'centroidCollection' );
+            _.each( centroids, function ( centroid, index ) {
+                var meanX = 0;
+                var meanY = 0;
+                _.each( centroid.dots, function ( dot ) {
+                    meanX += dot.x;
+                    meanY += dot.y;
+                } );
+                var centroidX = meanX / centroid.dots.length;
+                var centroidY = meanY / centroid.dots.length;
+                centroids[ index ].x = centroidX;
+                centroids[ index ].y = centroidY;
+            } );
+        },
+
+        /**
+         * Check if the algorithm converged
+         */
+        checkForFinished : function () {
+            return this.model.get( 'centroidCollection' ) === this.centroidCollection;
         },
 
         /**
