@@ -3,7 +3,7 @@
  *
  * Implements the logic for K-Means
  */
-define( [ 'marionette', 'logic/LogicView', 'logic/LogicModel', 'logic/LogicCollection' ], function ( Marionette, LogicView, LogicModel, LogicCollection ) {
+define( [ 'marionette', 'logic/LogicView', 'logic/LogicModel', 'logic/LogicCollection', 'underscore' ], function ( Marionette, LogicView, LogicModel, LogicCollection, _ ) {
 
     return Marionette.Controller.extend( {
 
@@ -11,6 +11,7 @@ define( [ 'marionette', 'logic/LogicView', 'logic/LogicModel', 'logic/LogicColle
          * Initialize the application's logic
          */
         initialize : function () {
+            this.DEV_OUTPUT = false;
 
             this.INITIAL_CENTROIDS  = 25;
             this.INITIAL_DATAPOINTS = 10000;
@@ -59,7 +60,7 @@ define( [ 'marionette', 'logic/LogicView', 'logic/LogicModel', 'logic/LogicColle
          * This is triggered when the view detects a click ont he start button
          */
         onStartBtnClicked : function () {
-            //console.log( 'Controller generating new centroids!' );
+            this.print( 'Controller generating new centroids!' );
             this.iteration();
             //this.view.clearCanvas();
             //this.view.drawCluster( this.generateRandomCentroids( Math.random() * 25 + 1 ) );
@@ -89,7 +90,7 @@ define( [ 'marionette', 'logic/LogicView', 'logic/LogicModel', 'logic/LogicColle
                 x : x,
                 y : y,
                 radius : this.view.CENTROID_RADIUS,
-                color: color || this.generateRandomColor() ,
+                color: color || this.generateRandomColor(),
                 dots : []
             }
         },
@@ -170,11 +171,18 @@ define( [ 'marionette', 'logic/LogicView', 'logic/LogicModel', 'logic/LogicColle
          */
         pushClusters : function () {
             this.dataPointCollection = [];
-            _.each( this.centroidCollection, function( centroid ) {
-                this.dataPointCollection.concat( centroid.dots );
+            _.each( this.centroidCollection, function( centroid, index ) {
+                _.each( centroid.dots , function ( dataPoint ) {
+                    this.dataPointCollection.push( dataPoint );
+                }.bind( this ) );
+                // TODO: remove .dots from this.centroidCollcetion, otherwise it will grow (concatenation) with each iteration
+                // which is not what we want (we want to replace it!)
+                this.centroidCollection[ index ].dots = []; // Centroid will get new data points later, so reset it for now
             }.bind( this ) );
+            this.print( 'this.dataPointCollection', this.dataPointCollection );
             _.each( this.dataPointCollection, function ( dataPoint )  {
                 var index = this.returnClusterIndex( this.centroidCollection, dataPoint );
+                dataPoint.color = this.centroidCollection[ index ].color;
                 this.centroidCollection[ index ].dots.push( dataPoint );
             }.bind( this ) );
         },
@@ -190,21 +198,30 @@ define( [ 'marionette', 'logic/LogicView', 'logic/LogicModel', 'logic/LogicColle
          * Next iteration step
          */
         iteration : function () {
-            debugger;
-            while( this.running ) {
-                debugger;
+            var x = 0;
+            var interval = setInterval( function () {
+                x += 1;
+                //debugger;
                 this.updateCentroids(); // Update our model for the next iteration step
+                this.model.set( 'id', this.model.get( 'iteration' ) + 1 ); // we are in the next iteration
                 this.model.set( 'iteration', this.model.get( 'iteration' ) + 1 ); // we are in the next iteration
                 this.pushClusters();
-                if( this.checkForFinished() ) {
+                if( ! this.checkForFinished() && x < 50 ) {
+                    //debugger;
                     this.view.clearCanvas();
                     this.view.drawCluster( this.centroidCollection );
                     this.iterationComplete();
                 }
                 else {
+                    alert( 'Done optimizing!' );
                     this.running = false;
+                    clearInterval( interval );
+                    this.view.disableBtn();
                 }
-            }
+            }.bind( this ), 250 );
+            //while( this.running && x < 50 ) {
+
+            //}
         },
 
         /**
@@ -212,7 +229,9 @@ define( [ 'marionette', 'logic/LogicView', 'logic/LogicModel', 'logic/LogicColle
          * using the arithmetic mean to calculate them
          */
         updateCentroids : function () {
+            //debugger;
             var centroids = this.model.get( 'centroidCollection' );
+            this.print( 'centroids before', centroids );
             _.each( centroids, function ( centroid, index ) {
                 var meanX = 0;
                 var meanY = 0;
@@ -220,18 +239,24 @@ define( [ 'marionette', 'logic/LogicView', 'logic/LogicModel', 'logic/LogicColle
                     meanX += dot.x;
                     meanY += dot.y;
                 } );
-                var centroidX = meanX / centroid.dots.length;
-                var centroidY = meanY / centroid.dots.length;
-                centroids[ index ].x = centroidX;
-                centroids[ index ].y = centroidY;
-            } );
+                // var centroidX = meanX / centroid.dots.length;
+                // var centroidY = meanY / centroid.dots.length;
+                var centroidX = Math.floor( meanX / centroid.dots.length );
+                var centroidY = Math.floor( meanY / centroid.dots.length );
+                this.centroidCollection[ index ].x = centroidX;
+                this.centroidCollection[ index ].y = centroidY;
+            }.bind( this ) );
+            this.print( 'centroids', this.centroidCollection );
         },
 
         /**
          * Check if the algorithm converged
          */
         checkForFinished : function () {
-            return this.model.get( 'centroidCollection' ) === this.centroidCollection;
+            // TODO: is that logic correct here?!
+            var stepBefore = this.model.get( 'iteration' ) - 1;
+            //debugger;
+            //return this.collection.models[ stepBefore ].centroidCollection === this.centroidCollection;
         },
 
         /**
@@ -240,7 +265,6 @@ define( [ 'marionette', 'logic/LogicView', 'logic/LogicModel', 'logic/LogicColle
         iterationComplete : function () {
             this.model.set( 'centroidCollection', this.centroidCollection );
             this.collection.add( this.model );
-            console.log( 'this.collection', this.collection );
         },
 
         /**
@@ -278,6 +302,15 @@ define( [ 'marionette', 'logic/LogicView', 'logic/LogicModel', 'logic/LogicColle
             // Push our data point to the corresponding centroid's cluster
             //centroidCollection[ centroidIndex ].dots.push( dataPoint );
             return centroidIndex;
+        },
+
+        /**
+         * Function handles console output depending on dev flag
+         */
+        print : function ( string, variable ) {
+            if ( this.DEV_OUTPUT === true ) {
+                console.log( string, variable );
+            }
         }
     });
 } );

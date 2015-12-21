@@ -1,7 +1,7 @@
 /**
  * Created by Kay on 11/24/2015.
  */
-define( [ 'jquery', 'marionette' ], function ( $, Marionette ) {
+define( [ 'jquery', 'marionette', 'underscore' ], function ( $, Marionette, _ ) {
     return Marionette.ItemView.extend( {
         template : function () {
             return '<canvas id="canvas"></canvas><br>' +
@@ -70,6 +70,11 @@ define( [ 'jquery', 'marionette' ], function ( $, Marionette ) {
         this.ctx.beginPath();
         this.ctx.fillStyle = color;
         this.ctx.arc( x, this.CANVAS_HEIGHT - y, radius, this.ARC_BEGIN, this.ARC_END );
+        //this.ctx.arc( Math.floor( x ),
+        //        Math.floor( this.CANVAS_HEIGHT - y ),
+        //        Math.floor( radius ),
+        //        Math.floor( this.ARC_BEGIN ),
+        //        Math.floor( this.ARC_END ) );
         this.ctx.fill();
         },
 
@@ -103,6 +108,10 @@ define( [ 'jquery', 'marionette' ], function ( $, Marionette ) {
         onBtnIterateClicked : function () {
             // Let the controller know the button was clicked
             this.trigger( 'onStartBtnClicked' );
+        },
+
+        disableBtn : function () {
+            this.ui.btnIterate.disable();
         }
 
     } );

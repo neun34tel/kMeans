@@ -4,7 +4,8 @@
 define( [ 'backbone' ], function ( Backbone ) {
     return Backbone.Model.extend( {
         defaults : {
-            iteration : 0,
+            id                 : 0,
+            iteration          : 0,
             centroidCollection : []
         }
     } );
