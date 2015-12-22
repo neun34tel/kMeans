@@ -1,7 +1,7 @@
 /**
  * Created by Kay on 11/24/2015.
  */
-define( [ 'jquery', 'marionette', 'underscore', 'paralleljs' ], function ( $, Marionette, _, Parallel ) {
+define( [ 'jquery', 'marionette', 'underscore' ], function ( $, Marionette, _ ) {
     return Marionette.ItemView.extend( {
         template : function () {
             return '<canvas id="canvas"></canvas><br>' +
@@ -104,11 +104,12 @@ define( [ 'jquery', 'marionette', 'underscore', 'paralleljs' ], function ( $, Ma
          * @param cluster: array centroid of dots
          */
         drawCluster : function ( cluster ) {
-            console.log( 'Parallel', Parallel );
-            console.log( 'cluster', cluster );
-            var centroids = new Parallel( cluster );
+            var p = new Parallel( cluster );
 
-            centroids.draw( centroids.x, centroids.y, centroids.radius, centroids.color, true );
+            p.spawn( function( centroids ) {
+                console.log( 'centroids', centroids );
+                this.draw( centroids.x, centroids.y, centroids.radius, centroids.color, true );
+            } );
 
             //console.log( 'drawCluster cluster', cluster );
             //_.each( cluster, function( centroid ) {
