@@ -13,8 +13,8 @@ define( [ 'marionette', 'logic/LogicView', 'logic/LogicModel', 'logic/LogicColle
         initialize : function () {
             this.DEV_OUTPUT = false;
 
-            this.INITIAL_CENTROIDS  = 25;
-            this.INITIAL_DATAPOINTS = 10000;
+            this.INITIAL_CENTROIDS  = 10;
+            this.INITIAL_DATAPOINTS = 15000;
 
             this.initializeModel();
             this.initializeCollection();

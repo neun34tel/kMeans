@@ -34,8 +34,8 @@ define( [ 'jquery', 'marionette', 'underscore' ], function ( $, Marionette, _ ) 
             // Circle data
             this.ARC_BEGIN  = 0;
             this.ARC_END    = Math.PI * 2;
-            this.CENTROID_RADIUS = 15;
-            this.DOT_RADIUS = 5;
+            this.CENTROID_RADIUS = 10;
+            this.DOT_RADIUS = 2;
 
             this.bindUIElements();
         },
@@ -65,17 +65,28 @@ define( [ 'jquery', 'marionette', 'underscore' ], function ( $, Marionette, _ ) 
          * @param y
          * @param radius
          * @param color
+         * @param isCluster
          */
-        draw : function ( x, y, radius, color ) {
+        draw : function ( x, y, radius, color, isCluster ) {
         this.ctx.beginPath();
-        this.ctx.fillStyle = color;
-        this.ctx.arc( x, this.CANVAS_HEIGHT - y, radius, this.ARC_BEGIN, this.ARC_END );
-        //this.ctx.arc( Math.floor( x ),
-        //        Math.floor( this.CANVAS_HEIGHT - y ),
-        //        Math.floor( radius ),
-        //        Math.floor( this.ARC_BEGIN ),
-        //        Math.floor( this.ARC_END ) );
-        this.ctx.fill();
+            if ( isCluster ) {
+                this.ctx.fillStyle = color;
+            }
+            else {
+                this.ctx.strokeStyle = color;
+            }
+            this.ctx.arc( x, this.CANVAS_HEIGHT - y, radius, this.ARC_BEGIN, this.ARC_END );
+            //this.ctx.arc( Math.floor( x ),
+            //        Math.floor( this.CANVAS_HEIGHT - y ),
+            //        Math.floor( radius ),
+            //        Math.floor( this.ARC_BEGIN ),
+            //        Math.floor( this.ARC_END ) );
+            if ( isCluster ) {
+                this.ctx.fill();
+            }
+            else {
+                this.ctx.stroke();
+            }
         },
 
         /**
@@ -95,7 +106,7 @@ define( [ 'jquery', 'marionette', 'underscore' ], function ( $, Marionette, _ ) 
         drawCluster : function ( cluster ) {
             //console.log( 'drawCluster cluster', cluster );
             _.each( cluster, function( centroid ) {
-                this.draw( centroid.x, centroid.y, centroid.radius, centroid.color );
+                this.draw( centroid.x, centroid.y, centroid.radius, centroid.color, true );
                 _.each( centroid.dots, function ( dataPoint ) {
                     this.draw( dataPoint.x, dataPoint.y, dataPoint.radius, centroid.color )
                 }.bind( this ) );
