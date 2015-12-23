@@ -68,6 +68,7 @@ define( [ 'jquery', 'marionette', 'underscore' ], function ( $, Marionette, _ ) 
          * @param isCluster
          */
         draw : function ( x, y, radius, color, isCluster ) {
+            console.log( 'draw call', this.ctx );
         this.ctx.beginPath();
             if ( isCluster ) {
                 this.ctx.fillStyle = color;
@@ -105,10 +106,10 @@ define( [ 'jquery', 'marionette', 'underscore' ], function ( $, Marionette, _ ) 
          */
         drawCluster : function ( cluster ) {
             var p = new Parallel( cluster );
-
-            p.spawn( function( centroids ) {
-                console.log( 'centroids', centroids );
-                this.draw( centroids.x, centroids.y, centroids.radius, centroids.color, true );
+            p.map( function( centroid ) {
+                console.log( 'centroids', centroid );
+                console.log( 'this', this );
+                this.draw( centroid.x, centroid.y, centroid.radius, centroid.color, true );
             } );
 
             //console.log( 'drawCluster cluster', cluster );
@@ -131,6 +132,5 @@ define( [ 'jquery', 'marionette', 'underscore' ], function ( $, Marionette, _ ) 
         disableBtn : function () {
             this.ui.btnIterate.disable();
         }
-
     } );
 } );
