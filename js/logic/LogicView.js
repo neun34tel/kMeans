@@ -28,8 +28,8 @@ define( [ 'jquery', 'marionette', 'underscore' ], function ( $, Marionette, _ ) 
             // UI Element constants
             this.WINDOW_HEIGHT = window.innerHeight;
             this.WINDOW_WIDTH  = window.innerWidth;
-            this.CANVAS_HEIGHT = this.WINDOW_HEIGHT - 250;
-            this.CANVAS_WIDTH  = this.WINDOW_WIDTH - 50;
+            this.CANVAS_HEIGHT = this.WINDOW_HEIGHT * 0.8;
+            this.CANVAS_WIDTH  = this.WINDOW_WIDTH * 0.95;
 
             // Circle data
             this.ARC_BEGIN  = 0;
